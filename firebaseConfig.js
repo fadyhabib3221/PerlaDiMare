@@ -5,13 +5,13 @@
 // 4) Copy the firebaseConfig object Firebase gives you and paste its values below.
 
 export const firebaseConfig = {
-    apiKey: "AIzaSyA8iRE4U6EN7yevjWC8saGgo09E-zDHo2A",
-    authDomain: "basic-442e4.firebaseapp.com",
-    projectId: "basic-442e4",
-    storageBucket: "basic-442e4.firebasestorage.app",
-    messagingSenderId: "101682937860",
-    appId: "1:101682937860:web:2a2d135bf5008d55057551",
-    measurementId: "G-6BXHXRL9Q4"
+  apiKey: "AIzaSyBOqfQXWuQ9cMGuE0GQpAsmVIagHgc_UMk",
+  authDomain: "perla-di-mare-c5cf3.firebaseapp.com",
+  projectId: "perla-di-mare-c5cf3",
+  storageBucket: "perla-di-mare-c5cf3.firebasestorage.app",
+  messagingSenderId: "647724644012",
+  appId: "1:647724644012:web:88e59e5af9888e1657d109",
+  measurementId: "G-QT8MB96C1Q"
 };
 
 // Firestore security rules (Firestore console -> Rules tab -> paste this -> Publish).
