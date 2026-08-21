@@ -1,10 +1,11 @@
 import React from "react";
-import { Building2, ClipboardList, Landmark, PieChart, Receipt, Users } from "lucide-react";
+import { Building2, ClipboardList, FileText, Landmark, PieChart, Receipt, Users } from "lucide-react";
 
 const TABS = [
   { key: "overview", label: "Overview", icon: PieChart },
   { key: "suppliers", label: "Suppliers", icon: Building2 },
   { key: "customers", label: "Customers", icon: Users },
+  { key: "invoices", label: "Invoices", icon: FileText },
   { key: "treasury", label: "Treasury & Banks", icon: Landmark },
   { key: "expenses", label: "Expenses", icon: Receipt },
   { key: "reports", label: "Financial Reports", icon: ClipboardList },

@@ -4,9 +4,6 @@ import React, { useState, useEffect, useRef, useReducer, useMemo } from "react";
 // alternating row shading and the highlighted totals row. Plain "xlsx" silently
 // drops any style info on write.
 import * as XLSX from "xlsx-js-style";
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth";
-import { firebaseConfig } from "./firebaseConfig.js";
 // مجاني بالكامل ومحلي في المتصفح — بديل عن استدعاء Claude Vision API لقراءة صور التذاكر.
 // الدقة أضعف من الـ AI vision لأنه OCR تقليدي (بيقرا الحروف بس، مش بيفهم شكل التذكرة)،
 // فمحتاج بعده regex عشان نحاول نلقط الحقول (اسم الراكب، رقم التذكرة، PNR، المطارات، التاريخ).
@@ -26,6 +23,7 @@ import AccountsCustomers from "./components/AccountsCustomers.jsx";
 import AccountsTreasury from "./components/AccountsTreasury.jsx";
 import AccountsExpenses from "./components/AccountsExpenses.jsx";
 import AccountsReports from "./components/AccountsReports.jsx";
+import AccountsInvoices from "./components/AccountsInvoices.jsx";
 import useSectionNavigation from "./hooks/useSectionNavigation.js";
 import { persistCollection } from "./utils/persistCollection.js";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
@@ -823,6 +821,7 @@ const ACCOUNTS_I18N = {
     confirmDeleteEntry: "هل تريد حذف هذا القيد؟",
     confirmDeletePayment: "هل تريد حذف هذه الدفعة؟",
     confirmDeleteCollection: "هل تريد حذف هذا التحصيل؟",
+    tabInvoices: "الفواتير", invoicesTitle: "الفواتير", invoicesSubtitle: "إصدار ومتابعة فواتير العملاء", newInvoice: "فاتورة جديدة", invoiceNumber: "رقم الفاتورة", dueDate: "تاريخ الاستحقاق", invoiceDescription: "وصف الخدمة", saveInvoice: "حفظ الفاتورة", noInvoices: "لا توجد فواتير", selectCustomer: "اختر العميل",
   },
   en: {
     tabOverview: "Overview", tabSuppliers: "Suppliers", tabCustomers: "Customers",
@@ -867,6 +866,7 @@ const ACCOUNTS_I18N = {
     confirmDeleteEntry: "Delete this entry?",
     confirmDeletePayment: "Delete this payment?",
     confirmDeleteCollection: "Delete this collection?",
+    tabInvoices: "Invoices", invoicesTitle: "Invoices", invoicesSubtitle: "Create and track customer invoices", newInvoice: "New invoice", invoiceNumber: "Invoice #", dueDate: "Due date", invoiceDescription: "Service description", saveInvoice: "Save invoice", noInvoices: "No invoices found", selectCustomer: "Select customer",
   },
 };
 
@@ -2462,6 +2462,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   const [expenses, setExpenses] = useState([]);
   const [supplierPayments, setSupplierPayments] = useState([]);
   const [customerPayments, setCustomerPayments] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [treasuryAccounts, setTreasuryAccounts] = useState([]);
   const [treasuryEntries, setTreasuryEntries] = useState([]);
   // Which sub-tab of the Accounts section is showing.
@@ -2609,7 +2610,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         // has logged in, so there's no workspace key in memory. secureLoad with a null
         // key correctly returns the given fallback ([]) without touching stored data.
         // They get their real values moments later via the login-triggered poll effect.
-        const [ticketsData, hotelsData, visasData, carsData, filesData, crmData, expensesData, supplierPaymentsData, customerPaymentsData, treasuryAccountsData, treasuryEntriesData, employeesRes, sessionRes, suggestionsRes, setupRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
+        const [ticketsData, hotelsData, visasData, carsData, filesData, crmData, expensesData, supplierPaymentsData, customerPaymentsData, invoicesData, treasuryAccountsData, treasuryEntriesData, employeesRes, sessionRes, suggestionsRes, setupRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
           secureLoad("tickets:list", null, []),
           secureLoad("tickets:hotels", null, []),
           secureLoad("tickets:visas", null, []),
@@ -2619,6 +2620,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
           secureLoad("tickets:expenses", null, []),
           secureLoad("tickets:supplierPayments", null, []),
           secureLoad("tickets:customerPayments", null, []),
+          secureLoad("tickets:invoices", null, []),
           secureLoad("tickets:treasuryAccounts", null, []),
           secureLoad("tickets:treasuryEntries", null, []),
           window.storage.get("tickets:employees", true).catch(() => null),
@@ -2643,6 +2645,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         setExpenses(expensesData);
         setSupplierPayments(supplierPaymentsData);
         setCustomerPayments(customerPaymentsData);
+        setInvoices(invoicesData);
         setTreasuryAccounts(treasuryAccountsData);
         setTreasuryEntries(treasuryEntriesData);
         setLoginHistory(loginHistoryRes && loginHistoryRes.value ? JSON.parse(loginHistoryRes.value) : []);
@@ -3516,6 +3519,9 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   };
   const persistCustomerPayments = async (next) => {
     return persistCollection({ storageKey: "tickets:customerPayments", next, guardedSave: guardedCollectionSave, setData: setCustomerPayments, setError: setAccountsError, conflictMessage: CONFLICT_MESSAGE });
+  };
+  const persistInvoices = async (next) => {
+    return persistCollection({ storageKey: "tickets:invoices", next, guardedSave: guardedCollectionSave, setData: setInvoices, setError: setAccountsError, conflictMessage: CONFLICT_MESSAGE });
   };
   const persistTreasuryAccounts = async (next) => {
     return persistCollection({ storageKey: "tickets:treasuryAccounts", next, guardedSave: guardedCollectionSave, setData: setTreasuryAccounts, setError: setAccountsError, conflictMessage: CONFLICT_MESSAGE });
@@ -4729,137 +4735,6 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
     setEditingUsername(null);
     setIsLocked(false);
     try { sessionStorage.removeItem(LOCK_FLAG_KEY); } catch (e) {}
-  };
-
-  // Google Sign-In handler — authenticates with Firebase, then checks or creates
-  // a local employee record for this Google user. Wraps the workspace key using
-  // the Google user's email as the "password" for wrapping, so they can decrypt
-  // without entering a separate password.
-  const handleGoogleSignIn = async () => {
-    try {
-      setLoginError("");
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const provider = new GoogleAuthProvider();
-      
-      const result = await signInWithPopup(auth, provider);
-      const googleUser = result.user;
-      
-      if (!googleUser.email) {
-        setLoginError("Google sign-in failed — no email found.");
-        return;
-      }
-
-      // Create or find an employee record with this Google user's email as username
-      const existingEmployee = (employees || []).find((e) => e.username === googleUser.email);
-      let employee = existingEmployee;
-
-      if (!employee) {
-        // Auto-create a new employee record for this Google user
-        employee = {
-          username: googleUser.email,
-          name: googleUser.displayName || googleUser.email,
-          password: "", // Google users don't have a stored password
-          isAdmin: false,
-          isGoogle: true,
-          canViewAll: true,
-          canAdd: true,
-          canEdit: false,
-          canDelete: false,
-          isAccounting: false,
-          canManageCompanies: false,
-          isOwner: false,
-          sections: { ...DEFAULT_SECTIONS },
-          sectionPerms: {},
-        };
-        
-        // Save the new employee
-        await persistEmployees([...((employees || []).filter((e) => e.username !== googleUser.email)), employee]);
-        setEmployees([...((employees || []).filter((e) => e.username !== googleUser.email)), employee]);
-      }
-
-      // Generate a workspace key if no one in the account has one yet
-      let resolvedWorkspaceKey = null;
-      if (!(employees || []).concat([employee]).some((e) => e.keyWrap)) {
-        const workspaceKeyObj = await generateWorkspaceKey();
-        // For Google users, wrap with a hash of their email instead of a password
-        const wrappingKey = await deriveAesKeyFromPassword(googleUser.email, crypto.getRandomValues(new Uint8Array(16)));
-        const saltBytes = crypto.getRandomValues(new Uint8Array(16));
-        const wrappingKeyForWrapping = await deriveAesKeyFromPassword(googleUser.email, saltBytes);
-        const keyMaterial = await crypto.subtle.importKey(
-          "raw", 
-          workspaceKeyObj, 
-          { name: "AES-GCM", length: 256 }, 
-          true, 
-          ["wrapKey"]
-        );
-        const wrapped = await crypto.subtle.wrapKey("raw", keyMaterial, wrappingKeyForWrapping, { name: "AES-GCM", iv: crypto.getRandomValues(new Uint8Array(12)) });
-        
-        employee.keyWrap = {
-          salt: bufToHex(saltBytes),
-          iv: bufToHex(crypto.getRandomValues(new Uint8Array(12))),
-          data: bufToHex(new Uint8Array(wrapped)),
-        };
-        
-        await persistEmployees([...((employees || []).filter((e) => e.username !== googleUser.email)), employee]);
-        resolvedWorkspaceKey = workspaceKeyObj;
-        setWorkspaceKey(workspaceKeyObj);
-      } else if (employee.keyWrap) {
-        // Try to unwrap with Google email as the password
-        const unwrapped = await unwrapWorkspaceKey(employee.keyWrap, googleUser.email);
-        if (unwrapped) {
-          resolvedWorkspaceKey = unwrapped;
-          setWorkspaceKey(unwrapped);
-        } else {
-          // If unwrap fails, generate new key
-          const workspaceKeyObj = await generateWorkspaceKey();
-          const saltBytes = crypto.getRandomValues(new Uint8Array(16));
-          const wrappingKeyForWrapping = await deriveAesKeyFromPassword(googleUser.email, saltBytes);
-          const keyMaterial = await crypto.subtle.importKey(
-            "raw", 
-            workspaceKeyObj, 
-            { name: "AES-GCM", length: 256 }, 
-            true, 
-            ["wrapKey"]
-          );
-          const wrapped = await crypto.subtle.wrapKey("raw", keyMaterial, wrappingKeyForWrapping, { name: "AES-GCM", iv: crypto.getRandomValues(new Uint8Array(12)) });
-          
-          employee.keyWrap = {
-            salt: bufToHex(saltBytes),
-            iv: bufToHex(crypto.getRandomValues(new Uint8Array(12))),
-            data: bufToHex(new Uint8Array(wrapped)),
-          };
-          
-          await persistEmployees([...((employees || []).filter((e) => e.username !== googleUser.email)), employee]);
-          resolvedWorkspaceKey = workspaceKeyObj;
-          setWorkspaceKey(workspaceKeyObj);
-        }
-      }
-
-      // Set the current user and save session
-      await storageSet("session:user", googleUser.email, false);
-      sessionStartedAtRef.current = Date.now();
-      const loggedInUser = { username: googleUser.email, name: employee.name, isAdmin: !!employee.isAdmin };
-      setCurrentUser(loggedInUser);
-      saveLocalSession(loggedInUser, resolvedWorkspaceKey, sessionStartedAtRef.current);
-      recordLogin(loggedInUser);
-      setLoginUsername("");
-      setLoginPassword("");
-
-      // Navigate to last section
-      try {
-        const lastSectionRes = await window.storage.get(`tickets:lastSection:${googleUser.email}`, false).catch(() => null);
-        const lastSection = lastSectionRes && lastSectionRes.value;
-        if (["flights", "hotels", "visa", "cars", "files", "crm"].includes(lastSection)) {
-          navigateToSection(lastSection, { replace: true });
-        }
-      } catch (e) {
-        // Best-effort fallback
-      }
-    } catch (error) {
-      console.error("Google Sign-In error:", error);
-      setLoginError(error.message || "Google sign-in failed. Please try again.");
-    }
   };
 
   // Covers the screen with a password prompt without ending the session — the
@@ -7599,6 +7474,40 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
       if (deleted) recordActivity("Payments", "deleted", `Deleted customer payment: ${deleted.customer || "customer"} (${deleted.amount})`);
     });
   };
+  const handleSaveInvoice = (draft) => {
+    const year = new Date(draft.issueDate || todayDateStr()).getFullYear();
+    const invoice = {
+      ...draft,
+      id: genId(),
+      number: `INV-${year}-${String(invoices.length + 1).padStart(4, "0")}`,
+      paidAmount: 0,
+      status: "Sent",
+    };
+    persistInvoices([invoice, ...invoices]);
+    recordActivity("Invoices", "created", `Created invoice: ${invoice.number} for ${invoice.customer}`);
+  };
+  const handleDeleteInvoice = (id) => {
+    requestConfirm("Delete this invoice?", () => {
+      const invoice = invoices.find((item) => item.id === id);
+      persistInvoices(invoices.filter((item) => item.id !== id));
+      if (invoice) recordActivity("Invoices", "deleted", `Deleted invoice: ${invoice.number}`);
+    });
+  };
+  const handleRecordInvoicePayment = (invoice, paymentForm) => {
+    const amount = parseFloat(paymentForm.amount) || 0;
+    const total = parseFloat(invoice.amount) || 0;
+    if (!amount || amount > Math.max(0, total - (parseFloat(invoice.paidAmount) || 0))) {
+      setAccountsError("Payment amount exceeds the invoice remaining balance");
+      return;
+    }
+    const customerPayment = { ...paymentForm, id: genId(), customer: invoice.customer, invoiceId: invoice.id, method: "cash" };
+    const paidAmount = (parseFloat(invoice.paidAmount) || 0) + amount;
+    const nextInvoices = invoices.map((item) => item.id === invoice.id ? { ...item, paidAmount, status: paidAmount >= total ? "Paid" : "Sent" } : item);
+    persistCustomerPayments([customerPayment, ...customerPayments]);
+    persistInvoices(nextInvoices);
+    setAccountsError("");
+    recordActivity("Payments", "created", `Recorded invoice payment: ${invoice.number} (${amount})`);
+  };
 
   // Exports the currently selected report range to an Excel workbook — revenue by
   // section, expenses by category, and the net profit summary — following the same
@@ -8673,23 +8582,6 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
                 className="group w-full mt-5 bg-gradient-to-r from-teal-800 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-2xl px-4 py-2.5 flex items-center justify-center gap-2 shadow-lg shadow-teal-800/30 transition-all">
                 Sign in
                 <Plane size={15} className="rotate-45 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-              </button>
-
-              <div className="mt-3 flex items-center gap-2">
-                <div className="flex-1 h-px bg-stone-300" />
-                <span className="text-xs text-stone-500 font-medium">or</span>
-                <div className="flex-1 h-px bg-stone-300" />
-              </div>
-
-              <button onClick={handleGoogleSignIn}
-                className="group w-full mt-3 bg-white border-2 border-stone-300 hover:border-teal-700 hover:bg-stone-50 text-stone-700 text-sm font-semibold rounded-2xl px-4 py-2.5 flex items-center justify-center gap-2 shadow-sm transition-all">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Sign in with Google
               </button>
 
               <p className="text-xs text-stone-400 mt-4 text-center flex items-center justify-center gap-1">
