@@ -70,7 +70,6 @@ export default function FlightBookingForm({
   ticketPaxCounts,
   ticketNetTotal,
   ticketSoldTotal,
-  ticketScanError,
   handleSubmit,
   handleCancel,
 }) {
@@ -1081,9 +1080,6 @@ export default function FlightBookingForm({
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4">
-        {ticketScanError && (
-          <p className="text-xs text-red-600 basis-full">{ticketScanError}</p>
-        )}
         <button
           onClick={handleSubmit}
           className="bg-gradient-to-b from-teal-700 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-xl px-4 py-2 shadow-sm shadow-teal-800/30 ring-1 ring-inset ring-white/10 transition-colors flex items-center gap-1.5"

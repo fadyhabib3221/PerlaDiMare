@@ -10639,6 +10639,9 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
           >
             <Upload size={14} /> {ticketScanLoading ? "Reading..." : "Upload Ticket Mask"}
           </button>
+          {ticketScanError && (
+            <p className="text-[10px] text-red-600 basis-full">{ticketScanError}</p>
+          )}
         </div>
 
         {showFlightLookup && (
@@ -10840,7 +10843,6 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   ticketPaxCounts={ticketPaxCounts}
   ticketNetTotal={ticketNetTotal}
   ticketSoldTotal={ticketSoldTotal}
-  ticketScanError={ticketScanError}
   handleSubmit={handleSubmit}
   handleCancel={handleCancel}
 />
