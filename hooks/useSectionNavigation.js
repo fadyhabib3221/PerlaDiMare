@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const VALID_SECTIONS = ["flights", "hotels", "visa", "cars", "files", "activities", "accounts", "analysis"];
+const VALID_SECTIONS = ["flights", "hotels", "visa", "cars", "files", "activities", "crm", "accounts", "analysis"];
 
 const sectionFromLocation = () => {
   if (typeof window === "undefined") return "flights";

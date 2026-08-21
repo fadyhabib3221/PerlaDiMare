@@ -33,6 +33,7 @@ import CarBookingsTable from "./components/CarBookingsTable.jsx";
 import FlightBookingForm from "./components/FlightBookingForm.jsx";
 import FlightBookingsTable from "./components/FlightBookingsTable.jsx";
 import FilesSection from "./components/FilesSection.jsx";
+import CRMSection from "./components/CRMSection.jsx";
 
 // Every read/write in this file goes through window.storage (the artifact persistent-storage
 // API). That API is only injected when the artifact is rendered inside claude.ai's artifact
@@ -1389,8 +1390,9 @@ const SECTION_OPTIONS = [
   { value: "visa", label: "Visa", icon: PassportIcon },
   { value: "cars", label: "Transportation", icon: Car },
   { value: "files", label: "Files", icon: FileText },
+  { value: "crm", label: "CRM", icon: Users },
 ];
-const DEFAULT_SECTIONS = { flights: true, hotels: true, visa: true, cars: true, files: true, activities: true };
+const DEFAULT_SECTIONS = { flights: true, hotels: true, visa: true, cars: true, files: true, activities: true, crm: true };
 // Merges an employee's stored section toggles over the all-allowed defaults, so a
 // legacy record with no "sections" field at all (or missing individual keys) still
 // resolves to full access rather than blocking every section.
@@ -2574,6 +2576,8 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   const [fileSelectedCompany, setFileSelectedCompany] = useState([]);
   const [fileSelectedEmployee, setFileSelectedEmployee] = useState([]);
 
+  const [crmLeads, setCrmLeads] = useState([]);
+
   // Every value ever entered (companies, customers, airlines, cities) is kept here so it
   // can be offered as an autocomplete suggestion later, even if the original ticket is deleted.
   const [suggestions, setSuggestions] = useState({ companies: [], customers: [], airlines: [], cities: [], suppliers: [], flightSuppliers: [...SUPPLIERS], hotelNames: [], visaSuppliers: [], carSuppliers: [] });
@@ -2602,12 +2606,13 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         // has logged in, so there's no workspace key in memory. secureLoad with a null
         // key correctly returns the given fallback ([]) without touching stored data.
         // They get their real values moments later via the login-triggered poll effect.
-        const [ticketsData, hotelsData, visasData, carsData, filesData, expensesData, supplierPaymentsData, customerPaymentsData, treasuryAccountsData, treasuryEntriesData, employeesRes, sessionRes, suggestionsRes, setupRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
+        const [ticketsData, hotelsData, visasData, carsData, filesData, crmData, expensesData, supplierPaymentsData, customerPaymentsData, treasuryAccountsData, treasuryEntriesData, employeesRes, sessionRes, suggestionsRes, setupRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
           secureLoad("tickets:list", null, []),
           secureLoad("tickets:hotels", null, []),
           secureLoad("tickets:visas", null, []),
           secureLoad("tickets:cars", null, []),
           secureLoad("tickets:files", null, []),
+          secureLoad("tickets:crm", null, []),
           secureLoad("tickets:expenses", null, []),
           secureLoad("tickets:supplierPayments", null, []),
           secureLoad("tickets:customerPayments", null, []),
@@ -2629,6 +2634,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         setVisaBookings(visasData);
         setCarBookings(carsData);
         setFiles(filesData);
+        setCrmLeads(crmData);
         setEmployees(employeesData);
         setRequests(requestsData);
         setExpenses(expensesData);
@@ -2731,12 +2737,13 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
       }
       inFlight = true;
       try {
-        const [ticketsRes, hotelsRes, visasRes, carsRes, filesRes, expensesRes, supplierPaymentsRes, customerPaymentsRes, treasuryAccountsRes, treasuryEntriesRes, flightApiKeyData, visaApiKeyData, employeesRes, suggestionsRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
+        const [ticketsRes, hotelsRes, visasRes, carsRes, filesRes, crmRes, expensesRes, supplierPaymentsRes, customerPaymentsRes, treasuryAccountsRes, treasuryEntriesRes, flightApiKeyData, visaApiKeyData, employeesRes, suggestionsRes, licenseRes, requestsRes, loginHistoryRes, activityLogRes] = await Promise.all([
           secureLoad("tickets:list", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:hotels", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:visas", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:cars", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:files", workspaceKey, null, { withMeta: true }),
+          secureLoad("tickets:crm", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:expenses", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:supplierPayments", workspaceKey, null, { withMeta: true }),
           secureLoad("tickets:customerPayments", workspaceKey, null, { withMeta: true }),
@@ -2765,10 +2772,10 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         // guardedCollectionSave (see persistTickets and friends, above) knows the version
         // this browser actually saw — that's what lets it detect another employee's save
         // landing in between instead of silently overwriting it.
-        const [ticketsData, hotelsData, visasData, carsData, filesData, expensesData, supplierPaymentsData, customerPaymentsData, treasuryAccountsData, treasuryEntriesData] = [
-          ticketsRes, hotelsRes, visasRes, carsRes, filesRes, expensesRes, supplierPaymentsRes, customerPaymentsRes, treasuryAccountsRes, treasuryEntriesRes,
+        const [ticketsData, hotelsData, visasData, carsData, filesData, crmData, expensesData, supplierPaymentsData, customerPaymentsData, treasuryAccountsData, treasuryEntriesData] = [
+          ticketsRes, hotelsRes, visasRes, carsRes, filesRes, crmRes, expensesRes, supplierPaymentsRes, customerPaymentsRes, treasuryAccountsRes, treasuryEntriesRes,
         ].map((res, i) => {
-          const key = ["tickets:list", "tickets:hotels", "tickets:visas", "tickets:cars", "tickets:files", "tickets:expenses", "tickets:supplierPayments", "tickets:customerPayments", "tickets:treasuryAccounts", "tickets:treasuryEntries"][i];
+          const key = ["tickets:list", "tickets:hotels", "tickets:visas", "tickets:cars", "tickets:files", "tickets:crm", "tickets:expenses", "tickets:supplierPayments", "tickets:customerPayments", "tickets:treasuryAccounts", "tickets:treasuryEntries"][i];
           if (res && res.value !== null && res.updatedAt !== null) {
             remoteVersionsRef.current[key] = res.updatedAt;
           }
@@ -2784,6 +2791,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         if (visasData) setVisaBookings(visasData);
         if (carsData) setCarBookings(carsData);
         if (filesData) setFiles(filesData);
+        if (crmData) setCrmLeads(crmData);
         // flightApiKeyData/visaApiKeyData can legitimately be "" (key removed) —
         // unlike the collections above, only skip applying them when genuinely
         // absent/locked (null).
@@ -10448,6 +10456,17 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
             <Compass size={22} />
             Activities
           </button>
+          <button
+            onClick={() => navigateToSection("crm")}
+            className={`shrink-0 flex flex-col items-center gap-1.5 px-4 md:px-6 py-2.5 md:py-3 rounded-2xl border text-xs font-semibold transition-colors ${
+              activeSection === "crm"
+                ? "bg-gradient-to-b from-teal-700 to-teal-900 text-white border-teal-800 shadow-md shadow-teal-800/30 ring-1 ring-inset ring-amber-600/50"
+                : "bg-white text-stone-500 border-stone-200 hover:border-amber-600 hover:text-teal-800 hover:shadow-sm"
+            }`}
+          >
+            <Users size={22} />
+            CRM
+          </button>
           {canAccessAccounts && (
           <button
             onClick={() => navigateToSection("accounts")}
@@ -12176,6 +12195,14 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         )}
 
         {activeSection === "activities" && <ActivitiesSection />}
+
+        {activeSection === "crm" && (
+          <CRMSection
+            crmLeads={crmLeads}
+            setCrmLeads={setCrmLeads}
+            currentUser={currentUser}
+          />
+        )}
 
         {activeSection === "files" && (
           <FilesSection
