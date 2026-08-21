@@ -31,6 +31,11 @@ export default function AccountsInvoices({
   if (activeTab !== "invoices") return null;
 
   const closeForm = () => { setShowForm(false); setForm(emptyInvoice()); };
+  const invoiceStatus = (invoice) => {
+    if ((parseFloat(invoice.paidAmount) || 0) >= (parseFloat(invoice.amount) || 0)) return "Paid";
+    if (invoice.status === "Draft") return "Draft";
+    return invoice.dueDate && invoice.dueDate < new Date().toISOString().slice(0, 10) ? "Overdue" : "Sent";
+  };
   const save = () => {
     if (!form.customer || !form.description || form.amount === "") return;
     onSave(form);
@@ -58,7 +63,7 @@ export default function AccountsInvoices({
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {["Draft", "Sent", "Overdue", "Paid"].map((status) => (
-          <div key={status} className="bg-white border border-stone-200 rounded-xl p-3"><p className="text-xs text-stone-500">{status}</p><p className="text-lg font-bold text-stone-800">{invoices.filter((invoice) => invoice.status === status).length}</p></div>
+          <div key={status} className="bg-white border border-stone-200 rounded-xl p-3"><p className="text-xs text-stone-500">{status}</p><p className="text-lg font-bold text-stone-800">{invoices.filter((invoice) => invoiceStatus(invoice) === status).length}</p></div>
         ))}
       </div>
       <div className="bg-white rounded-2xl border border-stone-200 overflow-x-auto">

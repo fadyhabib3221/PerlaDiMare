@@ -12672,6 +12672,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
             overview: at("tabOverview"),
             suppliers: at("tabSuppliers"),
             customers: at("tabCustomers"),
+            invoices: at("tabInvoices"),
             treasury: at("tabTreasury"),
             expenses: at("tabExpenses"),
             reports: at("tabReports"),
@@ -12754,6 +12755,20 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
           handleDeleteCustomerPayment={handleDeleteCustomerPayment}
           acctCurrency={acctCurrency}
           formatDisplayDate={formatDisplayDate}
+        />
+
+        <AccountsInvoices
+          activeTab={accountsTab}
+          invoices={invoices}
+          customerNames={[...new Set(customerLedger.map((customer) => customer.customer).filter(Boolean))].sort()}
+          treasuryAccounts={treasuryAccounts}
+          fmt={fmt}
+          acctCurrency={acctCurrency}
+          formatDisplayDate={formatDisplayDate}
+          onSave={handleSaveInvoice}
+          onDelete={handleDeleteInvoice}
+          onRecordPayment={handleRecordInvoicePayment}
+          at={at}
         />
 
 
