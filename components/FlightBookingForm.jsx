@@ -75,7 +75,7 @@ export default function FlightBookingForm({
 }) {
   return (
 !isAccountingUser && (canAddTickets || (form.id && canEditTickets)) && (
-    <div id="ticket-form" className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 mb-6 shadow-sm">
+    <div id="ticket-form" className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 mb-6">
       <h2 className="font-semibold text-stone-900 mb-4">{form.id ? "Edit ticket" : "Add a new ticket"}</h2>
       {error && (
         <div className="bg-red-50 text-red-700 text-sm rounded-xl px-3 py-2 mb-3">{error}</div>
@@ -91,8 +91,8 @@ export default function FlightBookingForm({
           ticket, instead of two separate checkbox boxes. Picking one clears/closes
           the other. */}
       <div className="mt-4 bg-stone-50 border border-stone-200 rounded-xl p-3">
-        <p className="text-xs font-medium text-stone-500 mb-2">This ticket is ...</p>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+        <p className="text-xs font-semibold text-stone-500 mb-2">This ticket is...</p>
+        <div className="flex flex-wrap gap-4 text-sm mb-1">
           <label className="flex items-center gap-1.5 cursor-pointer select-none text-stone-700">
             <input
               type="radio"
@@ -107,7 +107,7 @@ export default function FlightBookingForm({
                 setRefundSaved(false);
               }}
             />
-            <span>New ticket</span>
+            New ticket
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer select-none text-sky-800">
             <input
@@ -123,7 +123,7 @@ export default function FlightBookingForm({
                 setRefundSaved(false);
               }}
             />
-            <span>Exchange Ticket</span>
+            Exchange Ticket
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer select-none text-red-800">
             <input
@@ -136,7 +136,7 @@ export default function FlightBookingForm({
                 setRefundBoxOpen(true);
               }}
             />
-            <span>Refund Ticket</span>
+            Refund Ticket
           </label>
         </div>
 
@@ -331,7 +331,7 @@ export default function FlightBookingForm({
           ticket and its own price fields) — none of this new-ticket entry applies. */}
       {!refundBoxOpen && (
       <>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="flex flex-wrap items-start gap-2 mt-4">
         {(() => {
           const selectedCompanyRecord = suggestions.companies.find((c) => companyName(c) === form.company);
           const selectedDeals = selectedCompanyRecord ? companyDeals(selectedCompanyRecord) : [];
@@ -351,7 +351,7 @@ export default function FlightBookingForm({
           };
           return (
             <>
-              <div>
+              <div className="flex-1 min-w-[160px]">
                 <label className="text-xs text-stone-500 block mb-1">Corporates (optional)</label>
                 <div className="relative" ref={corporateDropdownRef}>
                   <button
@@ -375,6 +375,10 @@ export default function FlightBookingForm({
                         — No corporate —
                       </button>
                       {unregisteredCurrent && (
+                        // The ticket already has a company value that isn't (or is no longer) a
+                        // registered corporate — e.g. saved before Corporate Management existed,
+                        // or the corporate was later renamed/deleted. Keep it selectable/visible
+                        // instead of silently blanking the field.
                         <button
                           type="button"
                           onClick={() => setCorporateDropdownOpen(false)}
@@ -416,7 +420,7 @@ export default function FlightBookingForm({
                 </div>
               </div>
 
-              <div>
+              <div className="w-56 shrink-0">
                 <label className="text-xs text-stone-500 block mb-1">Deals</label>
                 <div className="relative" ref={dealsDropdownRef}>
                   <button
@@ -425,14 +429,14 @@ export default function FlightBookingForm({
                     onClick={() => setDealsDropdownOpen((o) => !o)}
                     className={`w-full border rounded-xl px-3 py-2 text-sm flex items-center justify-between gap-2 text-left focus:outline-none focus:ring-2 focus:ring-teal-700 ${
                       selectedDeals.length > 0
-                        ? "bg-white border-blue-300 text-stone-800"
+                        ? "bg-white border-teal-300 text-stone-800"
                         : "bg-stone-50 border-stone-200 text-stone-400 cursor-not-allowed"
                     }`}
                   >
                     <span className="truncate">
                       {selectedDeals.length > 0 ? `${selectedDeals.length} Deal${selectedDeals.length > 1 ? "s" : ""}` : "No deals"}
                     </span>
-                    <ChevronDown size={14} className={`shrink-0 transition-transform ${selectedDeals.length > 0 ? "text-blue-600" : "text-stone-300"} ${dealsDropdownOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown size={14} className={`shrink-0 transition-transform ${selectedDeals.length > 0 ? "text-teal-600" : "text-stone-300"} ${dealsDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {dealsDropdownOpen && selectedDeals.length > 0 && (
@@ -442,16 +446,16 @@ export default function FlightBookingForm({
                         return (
                           <div
                             key={i}
-                            className={`flex items-center justify-between gap-2 px-3 py-1.5 ${matchesAirline ? "bg-blue-50" : ""}`}
+                            className={`flex items-center justify-between gap-2 px-3 py-1.5 ${matchesAirline ? "bg-teal-50" : ""}`}
                           >
-                            <span className={`text-[11px] leading-snug ${matchesAirline ? "text-blue-900 font-semibold" : "text-blue-700"}`}>
+                            <span className={`text-[11px] leading-snug ${matchesAirline ? "text-teal-900 font-semibold" : "text-teal-700"}`}>
                               {d.airline && <span className="font-semibold">{d.airline.toUpperCase()}{" — "}</span>}
                               {d.details}
                             </span>
                             <button
                               type="button"
                               onClick={() => copyDeal(d, i)}
-                              className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-blue-700 hover:text-blue-900"
+                              className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-teal-700 hover:text-teal-900"
                               title="Copy this deal"
                             >
                               <Copy size={11} />
@@ -467,7 +471,7 @@ export default function FlightBookingForm({
             </>
           );
         })()}
-        <div>
+        <div className="w-40 shrink-0">
           <label className="text-xs text-stone-500 block mb-1">Supplier</label>
           {supplierOther ? (
             <div className="flex gap-2">
@@ -507,13 +511,13 @@ export default function FlightBookingForm({
             </select>
           )}
         </div>
-        <div>
+        <div className="w-14 shrink-0">
           <label className="text-xs text-stone-500 block mb-1">Customers</label>
           <input
             type="number"
             min={1}
             max={50}
-            className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
+            className="w-14 border border-stone-300 rounded-xl px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
             value={form.customersCount}
             onChange={(e) => handleCustomersCountChange(e.target.value)}
             onBlur={(e) => {
@@ -537,15 +541,15 @@ export default function FlightBookingForm({
         </label>
         <div className="space-y-2">
           {form.customers.map((c, i) => (
-            <div key={i} className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_110px_120px_minmax(0,1.1fr)_120px] gap-2 md:items-start">
+            <div key={i} className="flex flex-col md:flex-row gap-2 md:gap-3 md:items-start">
               <input
-                className="w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
+                className="w-full md:flex-1 border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
                 value={c.name}
                 onChange={(e) => handleCustomerFieldChange(i, "name", e.target.value)}
                 placeholder={i === 0 ? `Customer ${i + 1} name (required)` : `Customer ${i + 1} name`}
               />
               <select
-                className={`w-full border rounded-xl px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-teal-700 bg-white ${
+                className={`w-full md:w-[9ch] md:shrink-0 border rounded-xl px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-teal-700 bg-white ${
                   c.type === "child" || c.type === "infant" ? "border-blue-400 text-blue-700 font-medium" : "border-stone-300"
                 }`}
                 value={c.type || "adult"}
@@ -557,7 +561,7 @@ export default function FlightBookingForm({
                 <option value="infant">Infant</option>
               </select>
               <label
-                className="flex items-center gap-1.5 justify-center md:justify-start cursor-pointer select-none text-xs text-stone-500 py-2"
+                className="flex items-center gap-1.5 shrink-0 cursor-pointer select-none text-xs text-stone-500 md:py-2"
                 title="This customer has a second ticket number issued together with the first"
               >
                 <input
@@ -568,10 +572,10 @@ export default function FlightBookingForm({
                 />
                 Conjunction
               </label>
-              <div className="flex items-center border border-stone-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-teal-700">
+              <div className="w-full md:w-[24ch] md:shrink-0 flex items-center border border-stone-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-teal-700">
                 <input
                   className="min-w-0 text-sm outline-none bg-transparent flex-1"
-                  style={c.conjunction && (c.ticketNumber || "").length > 0 ? { flex: "0 0 auto", width: `${Math.max((c.ticketNumber || "").length - ((c.ticketNumber || "").match(/-/g) || []).length * 0.5, 3)}ch` } : { width: "100%" }}
+                  style={c.conjunction && (c.ticketNumber || "").length > 0 ? { flex: "0 0 auto", width: `${Math.max((c.ticketNumber || "").length - ((c.ticketNumber || "").match(/-/g) || []).length * 0.5, 3)}ch` } : { width: "20ch" }}
                   value={c.ticketNumber}
                   onChange={(e) => handleCustomerFieldChange(i, "ticketNumber", e.target.value)}
                   onBlur={() => handleTicketNumberBlur(i)}
@@ -591,11 +595,11 @@ export default function FlightBookingForm({
                 )}
               </div>
               <input
-                className="w-full border border-stone-300 rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none focus:ring-2 focus:ring-teal-700"
+                className="w-full md:w-[13ch] md:shrink-0 border border-stone-300 rounded-xl px-3 py-2 text-sm font-mono uppercase outline-none focus:ring-2 focus:ring-teal-700"
                 value={c.pnrReference || ""}
                 onChange={(e) => handleCustomerFieldChange(i, "pnrReference", e.target.value)}
                 onBlur={() => handlePnrReferenceBlur(i)}
-                placeholder="PNR REF"
+                placeholder="PNR ref"
                 maxLength={6}
                 title="Booking PNR reference (up to 6 letters/digits)"
               />
@@ -604,8 +608,8 @@ export default function FlightBookingForm({
         </div>
       </div>
 
-      <div className="mt-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-3 text-xs text-stone-500">
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex items-center gap-4 text-xs text-stone-500">
           <label className="flex items-center gap-1.5 cursor-pointer select-none">
             <input
               type="radio"
@@ -626,7 +630,7 @@ export default function FlightBookingForm({
             />
             Round trip
           </label>
-          <label className="flex items-center gap-2 text-xs font-medium text-stone-500 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs font-semibold text-stone-500 cursor-pointer select-none">
             <input
               type="radio"
               name="routeMode"
@@ -637,6 +641,8 @@ export default function FlightBookingForm({
                   ...form,
                   multiDestination: true,
                   routeFormat: "legs",
+                  // Seed the stop list from the current From/To the first time this is
+                  // switched on, so nothing already typed gets lost.
                   destinations:
                     !(form.destinations || []).some((d) => (d || "").trim())
                       ? [form.from || "", form.to || ""]
@@ -647,156 +653,264 @@ export default function FlightBookingForm({
             Multi-destination route (multi-city)
           </label>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[110px_110px_120px_120px_130px] gap-2 md:items-end">
-          {form.multiDestination ? (
-            <>
-              {legsFromPairs(form.destinations).map((_, i) => (
-                <div key={i} className="flex items-end gap-1">
-                  <span className="text-[10px] font-semibold text-stone-400 mb-1.5 shrink-0">
-                    Flight {i + 1}
-                  </span>
-                  <div>
-                    <label className="text-[10px] text-stone-400 block mb-1">From</label>
-                    <input
-                      className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
-                      value={form.destinations[i * 2]}
-                      onChange={(e) => handleDestinationChange(i * 2, e.target.value)}
-                      placeholder="CAI"
-                      list="city-suggestions"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-stone-400 block mb-1">To</label>
-                    <input
-                      className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
-                      value={form.destinations[i * 2 + 1]}
-                      onChange={(e) => handleDestinationChange(i * 2 + 1, e.target.value)}
-                      placeholder="DXB"
-                      list="city-suggestions"
-                    />
-                  </div>
-                  {form.destinations.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removeDestinationStop(i)}
-                      className="shrink-0 text-stone-400 hover:text-red-600 mb-1.5"
-                      title="Remove this flight"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addDestinationStop}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 hover:text-teal-900 mb-1.5 shrink-0"
-              >
-                <Plus size={14} /> Add flight
-              </button>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="text-xs text-stone-500 block mb-1">From</label>
-                <input
-                  className="w-full border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
-                  value={form.from}
-                  onChange={(e) => handleCityChange("from", e.target.value)}
-                  placeholder="CAI"
-                  list="city-suggestions"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500 block mb-1">To</label>
-                <input
-                  className="w-full border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
-                  value={form.to}
-                  onChange={(e) => handleCityChange("to", e.target.value)}
-                  placeholder="DXB"
-                  list="city-suggestions"
-                />
-              </div>
-              {form.tripType === "roundTrip" && (
+      <div className="flex flex-wrap items-end gap-2 mt-2">
+        {form.multiDestination ? (
+          <>
+            {/* Each group is one flight leg with its OWN From/To pair — legs no longer share
+                a point, so editing one leg's airport never changes the leg next to it.
+                Stored flat in form.destinations: leg i's From is cell 2*i, its To is
+                cell 2*i + 1. Rendered as direct siblings (not a stacked column) so every
+                leg sits in the same row as the Add-flight button and the Airline/Flight
+                number fields, wrapping only if the row runs out of width. */}
+            {legsFromPairs(form.destinations).map((_, i) => (
+              <div key={i} className="flex items-end gap-1">
+                <span className="text-[10px] font-semibold text-stone-400 mb-1.5 shrink-0">
+                  Flight {i + 1}
+                </span>
                 <div>
-                  <label className="text-xs text-stone-500 block mb-1">Return airport</label>
-                  <div
-                    className="w-full border border-stone-200 bg-stone-50 rounded-lg px-2 py-1.5 text-xs text-stone-600 uppercase truncate"
-                    title="Automatically matches the first (From) airport"
-                  >
-                    {form.from || "-"}
-                  </div>
+                  <label className="text-[10px] text-stone-400 block mb-1">From</label>
+                  <input
+                    className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
+                    value={form.destinations[i * 2]}
+                    onChange={(e) => handleDestinationChange(i * 2, e.target.value)}
+                    placeholder="CAI"
+                    list="city-suggestions"
+                  />
                 </div>
-              )}
-            </>
-          )}
-          <div>
-            <label className="text-xs text-stone-500 mb-1 flex items-center gap-1.5">
-              <span>Airline</span>
-              {getAirlineNameByIata(form.airline) && (
-                <span className="bg-teal-50 text-teal-700 border border-teal-200 rounded px-1.5 py-0.5 text-[10px] font-semibold">
-                  {getAirlineNameByIata(form.airline)}
-                </span>
-              )}
-            </label>
-            <input
-              className="w-full border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700"
-              value={form.airline}
-              onChange={(e) => handleAirlineChange(e.target.value)}
-              placeholder="MS"
-              list="airline-suggestions"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-stone-500 mb-1 flex items-center gap-1.5">
-              <span>Flight number</span>
-              {flightLookupResult?.flight?.iata?.toUpperCase() === (form.flightNumber || "").trim().toUpperCase() && flightLookupResult?.flight_status && (
-                <span className={`border rounded px-1.5 py-0.5 text-[10px] font-semibold ${FLIGHT_STATUS_COLOR_CLASSES[flightLookupResult.flight_status] || "bg-stone-50 text-stone-700 border-stone-200"}`}>
-                  {FLIGHT_STATUS_LABELS[flightLookupResult.flight_status] || flightLookupResult.flight_status}
-                </span>
-              )}
-            </label>
-            <div className="flex items-center gap-1">
+                <div>
+                  <label className="text-[10px] text-stone-400 block mb-1">To</label>
+                  <input
+                    className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
+                    value={form.destinations[i * 2 + 1]}
+                    onChange={(e) => handleDestinationChange(i * 2 + 1, e.target.value)}
+                    placeholder="DXB"
+                    list="city-suggestions"
+                  />
+                </div>
+                {form.destinations.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeDestinationStop(i)}
+                    className="shrink-0 text-stone-400 hover:text-red-600 mb-1.5"
+                    title="Remove this flight"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addDestinationStop}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 hover:text-teal-900 mb-1.5 shrink-0"
+            >
+              <Plus size={14} /> Add flight
+            </button>
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="text-xs text-stone-500 block mb-1">From</label>
               <input
-                className="w-full border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
-                value={form.flightNumber}
-                onChange={(e) => setForm({ ...form, flightNumber: e.target.value })}
-                placeholder="MS985"
-                title="Optional — look this up to auto-fill From/To/Airline and see live status"
+                className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
+                value={form.from}
+                onChange={(e) => handleCityChange("from", e.target.value)}
+                placeholder="CAI"
+                list="city-suggestions"
               />
-              <button
-                type="button"
-                onClick={handleFormFlightLookup}
-                disabled={flightLookupLoading || !(form.flightNumber || "").trim()}
-                title={flightApiKey ? "Look up flight (AviationStack)" : "Add an AviationStack API key in \"Check flight status\" first"}
-                className="shrink-0 border border-stone-300 rounded-lg p-1.5 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
-              >
-                <Search size={14} />
-              </button>
             </div>
-            {flightLookupError && (
-              <p className="text-[10px] text-red-600 mt-1 max-w-[9rem]">{flightLookupError}</p>
+            <div>
+              <label className="text-xs text-stone-500 block mb-1">To</label>
+              <input
+                className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
+                value={form.to}
+                onChange={(e) => handleCityChange("to", e.target.value)}
+                placeholder="DXB"
+                list="city-suggestions"
+              />
+            </div>
+            {form.tripType === "roundTrip" && (
+              <div>
+                <label className="text-xs text-stone-500 block mb-1">Return airport</label>
+                <div
+                  className="w-16 border border-stone-200 bg-stone-50 rounded-lg px-2 py-1.5 text-xs text-stone-600 uppercase truncate"
+                  title="Automatically matches the first (From) airport"
+                >
+                  {form.from || "-"}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        <div>
+          <label className="text-xs text-stone-500 mb-1 flex items-center gap-1.5">
+            <span>Airline</span>
+            {getAirlineNameByIata(form.airline) && (
+              <span className="bg-teal-50 text-teal-700 border border-teal-200 rounded px-1.5 py-0.5 text-[10px] font-semibold">
+                {getAirlineNameByIata(form.airline)}
+              </span>
+            )}
+          </label>
+          <input
+            className="w-16 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700"
+            value={form.airline}
+            onChange={(e) => handleAirlineChange(e.target.value)}
+            placeholder="MS"
+            list="airline-suggestions"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-stone-500 mb-1 flex items-center gap-1.5">
+            <span>Flight number</span>
+            {flightLookupResult?.flight?.iata?.toUpperCase() === (form.flightNumber || "").trim().toUpperCase() && flightLookupResult?.flight_status && (
+              <span className={`border rounded px-1.5 py-0.5 text-[10px] font-semibold ${FLIGHT_STATUS_COLOR_CLASSES[flightLookupResult.flight_status] || "bg-stone-50 text-stone-700 border-stone-200"}`}>
+                {FLIGHT_STATUS_LABELS[flightLookupResult.flight_status] || flightLookupResult.flight_status}
+              </span>
+            )}
+          </label>
+          <div className="flex items-center gap-1">
+            <input
+              className="w-20 border border-stone-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-700 uppercase"
+              value={form.flightNumber}
+              onChange={(e) => setForm({ ...form, flightNumber: e.target.value })}
+              placeholder="MS985"
+              title="Optional — look this up to auto-fill From/To/Airline and see live status"
+            />
+            <button
+              type="button"
+              onClick={handleFormFlightLookup}
+              disabled={flightLookupLoading || !(form.flightNumber || "").trim()}
+              title={flightApiKey ? "Look up flight (AviationStack)" : "Add an AviationStack API key in \"Check flight status\" first"}
+              className="shrink-0 border border-stone-300 rounded-lg p-1.5 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+            >
+              <Search size={14} />
+            </button>
+          </div>
+          {flightLookupError && (
+            <p className="text-[10px] text-red-600 mt-1 max-w-[9rem]">{flightLookupError}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile layout: date gets its own row (native date inputs can overflow
+          their grid cell on phones), prices share a separate 3-col row. */}
+      <div className="sm:hidden mt-3 w-full min-w-0 overflow-hidden">
+        <label className="text-xs text-stone-500 block mb-1">Ticket issue date</label>
+        <input
+          type="date"
+          lang="en-GB"
+          max={todayDateStr()}
+          className="block w-full max-w-full min-w-0 box-border border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
+          style={{ WebkitAppearance: "none" }}
+          value={form.date}
+          onChange={(e) => {
+            const v = e.target.value;
+            setForm({ ...form, date: v > todayDateStr() ? todayDateStr() : v });
+          }}
+        />
+      </div>
+      <div className="sm:hidden grid grid-cols-2 gap-2 mt-3">
+        <div>
+          <label className="text-xs text-stone-500 block mb-1">Net currency</label>
+          <select
+            className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 bg-white"
+            value={form.netCurrency}
+            onChange={(e) => setForm({ ...form, netCurrency: e.target.value })}
+          >
+            {HOTEL_CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-stone-500 block mb-1">Net price</label>
+          <div className="relative">
+            <input
+              type="number"
+              className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 price-input"
+              value={form.netPrice}
+              onChange={(e) => setForm({ ...form, netPrice: e.target.value })}
+              onBlur={(e) => setForm({ ...form, netPrice: addCentsOnBlur(e.target.value) })}
+              placeholder="0"
+            />
+            {usdHint(form.netPrice, form.netCurrency, form.usdRate) && (
+              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] leading-none text-emerald-600 bg-white/90 pl-1 pointer-events-none">
+                {usdHint(form.netPrice, form.netCurrency, form.usdRate)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="col-span-2">
+          <label className="text-xs text-stone-500 block mb-1">Net paid via</label>
+          <select
+            className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 bg-white"
+            value={form.netPaymentMethod || "cash"}
+            onChange={(e) => setForm({ ...form, netPaymentMethod: e.target.value })}
+          >
+            {NET_PAYMENT_METHODS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="sm:hidden grid grid-cols-2 gap-2 mt-2">
+        <div>
+          <label className="text-xs text-stone-500 block mb-1">Sold currency</label>
+          <select
+            className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 bg-white"
+            value={form.soldCurrency}
+            onChange={(e) => setForm({ ...form, soldCurrency: e.target.value })}
+          >
+            {HOTEL_CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-stone-500 block mb-1">Sold price</label>
+          <div className="relative">
+            <input
+              type="number"
+              className="w-full border border-stone-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 price-input"
+              value={form.soldPrice}
+              onChange={(e) => setForm({ ...form, soldPrice: e.target.value })}
+              onBlur={(e) => setForm({ ...form, soldPrice: addCentsOnBlur(e.target.value) })}
+              placeholder="0"
+            />
+            {usdHint(form.soldPrice, form.soldCurrency, form.usdRate) && (
+              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] leading-none text-emerald-600 bg-white/90 pl-1 pointer-events-none">
+                {usdHint(form.soldPrice, form.soldCurrency, form.usdRate)}
+              </span>
             )}
           </div>
         </div>
       </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
-        <div className="lg:col-span-2">
-          <label className="text-xs text-stone-500 block mb-1">Ticket issue date</label>
-          <input
-            type="date"
-            lang="en-GB"
-            max={todayDateStr()}
-            className="w-full border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
-            value={form.date}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm({ ...form, date: v > todayDateStr() ? todayDateStr() : v });
-            }}
-          />
+      <div className="sm:hidden mt-2">
+        <label className="text-xs text-stone-500 block mb-1">Profit (auto, EGP)</label>
+        <div className="w-full border border-stone-200 bg-stone-50 rounded-xl px-2 py-2 text-sm text-emerald-700 font-semibold truncate">
+          {fmt(ticketProfitEgp(form))} EGP
         </div>
+      </div>
+
+      {/* Desktop/tablet layout: date on its own row, then net/sold — each with its
+          own currency — plus the EGP profit preview. */}
+      <div className="hidden sm:block sm:mt-3">
+        <label className="text-xs text-stone-500 block mb-1">Ticket issue date</label>
+        <input
+          type="date"
+          lang="en-GB"
+          max={todayDateStr()}
+          className="w-full max-w-xs border border-stone-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700"
+          value={form.date}
+          onChange={(e) => {
+            const v = e.target.value;
+            setForm({ ...form, date: v > todayDateStr() ? todayDateStr() : v });
+          }}
+        />
+      </div>
+      <div className="hidden sm:grid sm:grid-cols-6 sm:gap-3 sm:mt-3">
         <div>
           <label className="text-xs text-stone-500 block mb-1">Net currency</label>
           <select
@@ -869,9 +983,9 @@ export default function FlightBookingForm({
             )}
           </div>
         </div>
-        <div className="lg:col-span-1">
-          <label className="text-xs text-stone-500 block mb-1">Profit</label>
-          <div className="w-full border border-emerald-200 bg-emerald-50 rounded-xl px-3 py-2 text-sm text-emerald-700 font-semibold">
+        <div>
+          <label className="text-xs text-stone-500 block mb-1">Profit (auto, EGP)</label>
+          <div className="w-full border border-stone-200 bg-stone-50 rounded-xl px-3 py-2 text-sm text-emerald-700 font-semibold">
             {fmt(ticketProfitEgp(form))} EGP
           </div>
         </div>
