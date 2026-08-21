@@ -3187,6 +3187,9 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   const persistTickets = async (next) => {
     return persistCollection({ storageKey: "tickets:list", next, guardedSave: guardedCollectionSave, setData: setTickets, setError: setError, conflictMessage: CONFLICT_MESSAGE });
   };
+  const persistCrmLeads = async (next) => {
+    return persistCollection({ storageKey: "tickets:crm", next, guardedSave: guardedCollectionSave, setData: setCrmLeads, setError: setError, conflictMessage: CONFLICT_MESSAGE });
+  };
 
   // The USD -> EGP rate is entered by hand (e.g. from the CBE's published rate each
   // morning) and saved to shared storage, so every signed-in employee sees the same
@@ -5800,15 +5803,46 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   };
 
   // ---------- Backup / restore (main account or Owner) ----------
-  const handleBackup = () => {
+  const handleBackup = async () => {
     if (!currentUser.isAdmin && !isOwnerUser) return;
+    const [usdRateRes, iataBalanceRes, iataHistoryRes] = await Promise.all([
+      window.storage.get("tickets:usdRate", true).catch(() => null),
+      window.storage.get("tickets:iataBalance", true).catch(() => null),
+      window.storage.get("tickets:iataHistory", true).catch(() => null),
+    ]);
     const payload = {
-      backupFormat: "flight-tickets-v1",
+      backupFormat: "travel-agency-v2",
       exportedAt: new Date().toISOString(),
       exportedBy: currentUser.name,
-      tickets,
-      employees,
-      suggestions,
+      collections: {
+        tickets,
+        hotels: hotelBookings,
+        visas: visaBookings,
+        cars: carBookings,
+        files,
+        crm: crmLeads,
+        expenses,
+        supplierPayments,
+        customerPayments,
+        invoices,
+        treasuryAccounts,
+        treasuryEntries,
+      },
+      metadata: {
+        employees,
+        suggestions,
+        requests,
+        loginHistory,
+        activityLog,
+        closedYears,
+        license: licenseRecord,
+        setupComplete,
+        flightApiKey,
+        visaApiKey,
+        usdRate: usdRateRes && usdRateRes.value ? JSON.parse(usdRateRes.value) : { rate: usdToEgpRate, date: usdToEgpRateDate },
+        iataBalance: iataBalanceRes && iataBalanceRes.value !== undefined ? iataBalanceRes.value : iataBalance,
+        iataHistory: iataHistoryRes && iataHistoryRes.value ? JSON.parse(iataHistoryRes.value) : iataHistory,
+      },
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -5819,7 +5853,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    recordActivity("Backup", "created", `Exported a full backup (${tickets.length} tickets, ${employees.length} employees)`);
+    recordActivity("Backup", "created", `Exported a full backup (${tickets.length} tickets, ${employees ? employees.length : 0} employees, ${invoices.length} invoices)`);
   };
 
   const triggerRestore = () => {
@@ -5837,13 +5871,15 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!parsed || !Array.isArray(parsed.tickets) || !Array.isArray(parsed.employees)) {
+      const incomingCollections = parsed.collections || parsed;
+      const incomingMetadata = parsed.metadata || parsed;
+      if (!parsed || !Array.isArray(incomingCollections.tickets) || !Array.isArray(incomingMetadata.employees)) {
         setRestoreError("This file doesn't look like a valid backup");
         return;
       }
       // Normalize suggestions defensively so nothing from the backup is silently dropped,
       // even if the file is from an older/partial export.
-      const s = parsed.suggestions || {};
+      const s = incomingMetadata.suggestions || {};
       const normalizedSuggestions = {
         companies: Array.isArray(s.companies) ? s.companies : [],
         // Never restore saved customer names — this field must have no autocomplete history.
@@ -5863,34 +5899,35 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
         return incT > curT ? incoming : current;
       };
 
-      const mergedTicketsMap = new Map(tickets.map((t) => [t.id, t]));
-      let ticketsAdded = 0, ticketsUpdated = 0;
-      for (const incoming of parsed.tickets) {
-        if (!incoming || !incoming.id) continue;
-        const current = mergedTicketsMap.get(incoming.id);
-        if (!current) {
-          mergedTicketsMap.set(incoming.id, incoming);
-          ticketsAdded++;
-        } else {
-          const winner = newerOf(current, incoming);
-          if (winner !== current) ticketsUpdated++;
-          mergedTicketsMap.set(incoming.id, winner);
-        }
-      }
-      const mergedTickets = [...mergedTicketsMap.values()];
-
-      const mergedEmployeesMap = new Map(employees.map((e) => [e.username, e]));
-      let employeesAdded = 0;
-      for (const incoming of parsed.employees) {
-        if (!incoming || !incoming.username) continue;
-        if (!mergedEmployeesMap.has(incoming.username)) {
-          mergedEmployeesMap.set(incoming.username, incoming);
-          employeesAdded++;
-        }
-        // On a username collision, keep the current live account as-is (don't overwrite a
-        // live password/permissions with an older backup copy — that could lock someone out).
-      }
-      const mergedEmployees = [...mergedEmployeesMap.values()];
+      const mergeRecords = (current, incoming, key = "id") => {
+        const map = new Map((current || []).filter((item) => item && item[key]).map((item) => [item[key], item]));
+        let added = 0;
+        let updated = 0;
+        (incoming || []).forEach((item) => {
+          if (!item || !item[key]) return;
+          const existing = map.get(item[key]);
+          if (!existing) { map.set(item[key], item); added++; return; }
+          const winner = newerOf(existing, item);
+          if (winner !== existing) { map.set(item[key], winner); updated++; }
+        });
+        return { records: [...map.values()], added, updated };
+      };
+      const currentCollections = {
+        tickets, hotels: hotelBookings, visas: visaBookings, cars: carBookings, files, crm: crmLeads,
+        expenses, supplierPayments, customerPayments, invoices, treasuryAccounts, treasuryEntries,
+      };
+      const collectionKeys = Object.keys(currentCollections);
+      const mergedCollections = {};
+      let totalAdded = 0;
+      let totalUpdated = 0;
+      collectionKeys.forEach((key) => {
+        const result = mergeRecords(currentCollections[key], incomingCollections[key] || []);
+        mergedCollections[key] = result.records;
+        totalAdded += result.added;
+        totalUpdated += result.updated;
+      });
+      const employeeResult = mergeRecords(employees || [], incomingMetadata.employees, "username");
+      const mergedEmployees = employeeResult.records;
 
       const unionUnique = (a, b) => [...new Set([...(a || []), ...(b || [])])];
       const mergedSuggestions = {
@@ -5901,16 +5938,37 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
       };
 
       requestConfirm(
-        `This will merge the backup file into your current data: ${ticketsAdded} new ticket(s) and ${employeesAdded} new employee account(s) will be added` +
-          (ticketsUpdated ? `, and ${ticketsUpdated} ticket(s) will be updated with a newer version from the file` : "") +
+        `This will merge the complete backup into your current data: ${totalAdded} new record(s), ${totalUpdated} updated record(s), and ${employeeResult.added} new employee account(s) will be added` +
           `. Nothing currently in your live data will be removed. Continue?`,
         async () => {
-          await persistTickets(mergedTickets);
+          await persistTickets(mergedCollections.tickets);
+          await persistHotelBookings(mergedCollections.hotels);
+          await persistVisaBookings(mergedCollections.visas);
+          await persistCarBookings(mergedCollections.cars);
+          await persistFiles(mergedCollections.files);
+          await persistCrmLeads(mergedCollections.crm);
+          await persistExpenses(mergedCollections.expenses);
+          await persistSupplierPayments(mergedCollections.supplierPayments);
+          await persistCustomerPayments(mergedCollections.customerPayments);
+          await persistInvoices(mergedCollections.invoices);
+          await persistTreasuryAccounts(mergedCollections.treasuryAccounts);
+          await persistTreasuryEntries(mergedCollections.treasuryEntries);
           await persistEmployees(mergedEmployees);
           await persistSuggestions(mergedSuggestions);
-          recordActivity("Backup", "restored", `Merged a backup into live data (+${ticketsAdded} tickets, ~${ticketsUpdated} updated, +${employeesAdded} employees)`);
+          if (Array.isArray(incomingMetadata.requests)) { setRequests(incomingMetadata.requests); await storageSet("tickets:requests", JSON.stringify(incomingMetadata.requests), true); }
+          if (incomingMetadata.closedYears && typeof incomingMetadata.closedYears === "object") { setClosedYears(incomingMetadata.closedYears); await storageSet("tickets:closedYears", JSON.stringify(incomingMetadata.closedYears), true); }
+          if (Array.isArray(incomingMetadata.loginHistory)) { setLoginHistory(incomingMetadata.loginHistory); await storageSet("tickets:loginHistory", JSON.stringify(incomingMetadata.loginHistory), true); }
+          if (Array.isArray(incomingMetadata.activityLog)) { setActivityLog(incomingMetadata.activityLog); await storageSet("tickets:activityLog", JSON.stringify(incomingMetadata.activityLog), true); }
+          if (incomingMetadata.license) { dispatchLicense({ record: incomingMetadata.license, isLicensed: true }); await storageSet("tickets:license", JSON.stringify(incomingMetadata.license), true); }
+          if (incomingMetadata.setupComplete !== undefined) { setSetupComplete(!!incomingMetadata.setupComplete); await storageSet("tickets:setupComplete", incomingMetadata.setupComplete ? "true" : "false", true); }
+          if (incomingMetadata.flightApiKey !== undefined) { setFlightApiKey(incomingMetadata.flightApiKey); await secureSave("tickets:flightApiKey", workspaceKey, incomingMetadata.flightApiKey, { requireKey: true }); }
+          if (incomingMetadata.visaApiKey !== undefined) { setVisaApiKey(incomingMetadata.visaApiKey); await secureSave("tickets:visaApiKey", workspaceKey, incomingMetadata.visaApiKey, { requireKey: true }); }
+          if (incomingMetadata.usdRate) { setUsdToEgpRate(incomingMetadata.usdRate.rate ?? null); setUsdToEgpRateDate(incomingMetadata.usdRate.date || ""); await storageSet("tickets:usdRate", JSON.stringify(incomingMetadata.usdRate), true); }
+          if (incomingMetadata.iataBalance !== undefined && incomingMetadata.iataBalance !== null) { setIataBalance(parseFloat(incomingMetadata.iataBalance)); await storageSet("tickets:iataBalance", String(incomingMetadata.iataBalance), true); }
+          if (incomingMetadata.iataHistory) { setIataHistory(incomingMetadata.iataHistory); await storageSet("tickets:iataHistory", JSON.stringify(incomingMetadata.iataHistory), true); }
+          recordActivity("Backup", "restored", `Merged complete backup (+${totalAdded} records, ~${totalUpdated} updated, +${employeeResult.added} employees)`);
           setRestoreSuccess(
-            `Backup merged successfully: ${ticketsAdded} new ticket(s), ${ticketsUpdated} updated, ${employeesAdded} new employee account(s). Nothing was deleted.`
+            `Complete backup merged successfully: ${totalAdded} new record(s), ${totalUpdated} updated, ${employeeResult.added} new employee account(s). Nothing was deleted.`
           );
           setConfirmDialog(null);
         }
