@@ -10826,6 +10826,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   getAirlineNameByIata={getAirlineNameByIata}
   handleAirlineChange={handleAirlineChange}
   flightLookupResult={flightLookupResult}
+  flightLookupError={flightLookupError}
   FLIGHT_STATUS_COLOR_CLASSES={FLIGHT_STATUS_COLOR_CLASSES}
   FLIGHT_STATUS_LABELS={FLIGHT_STATUS_LABELS}
   flightLookupLoading={flightLookupLoading}

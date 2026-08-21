@@ -56,6 +56,7 @@ export default function FlightBookingForm({
   getAirlineNameByIata,
   handleAirlineChange,
   flightLookupResult,
+  flightLookupError,
   FLIGHT_STATUS_COLOR_CLASSES,
   FLIGHT_STATUS_LABELS,
   flightLookupLoading,
