@@ -1,4 +1,4 @@
-import { Check, Trash2, X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 const HotelBookingForm = ({
   canAddTickets,
@@ -38,10 +38,10 @@ const HotelBookingForm = ({
   resetHotelForm,
 }) => (
   canAddTickets && (
-    <div className="bg-white border border-stone-200 rounded-2xl p-4 md:p-5 mb-6">
-      <h2 className="font-semibold text-stone-900 mb-4">
+    <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
+      <h3 className="text-sm font-bold text-stone-700 mb-4">
         {hotelEditingId ? "Edit hotel booking" : "New hotel booking"}
-      </h2>
+      </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="text-xs text-stone-500 block mb-1">
@@ -419,16 +419,16 @@ const HotelBookingForm = ({
       <div className="flex items-center gap-3 mt-4">
         <button
           onClick={handleSaveHotel}
-          className="bg-gradient-to-b from-teal-700 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-full px-4 py-2 shadow-sm shadow-teal-800/30 ring-1 ring-inset ring-white/10 transition-colors flex items-center gap-1.5"
+          className="bg-gradient-to-b from-teal-700 to-teal-900 text-white text-sm font-semibold rounded-xl px-5 py-2.5 hover:brightness-110"
         >
-          <Check size={16} /> {hotelEditingId ? "Save changes" : "Add booking"}
+          {hotelEditingId ? "Save changes" : "Add booking"}
         </button>
         {hotelEditingId && (
           <button
             onClick={resetHotelForm}
-            className="border border-stone-300 text-stone-600 text-sm rounded-full px-4 py-2 flex items-center gap-1.5"
+            className="text-sm font-semibold text-stone-500 rounded-xl px-4 py-2.5 hover:bg-stone-50"
           >
-            <X size={16} /> Cancel
+            Cancel
           </button>
         )}
       </div>
