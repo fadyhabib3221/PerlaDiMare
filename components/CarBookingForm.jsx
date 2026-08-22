@@ -20,10 +20,10 @@ export default function CarBookingForm({
   resetCarForm,
 }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
-      <h3 className="text-sm font-bold text-stone-700 mb-4">
+    <div className="bg-white border border-stone-200 rounded-2xl p-4 md:p-5 mb-6">
+      <h2 className="font-semibold text-stone-900 mb-4">
         {carEditingId ? "Edit transfer booking" : "New transfer booking"}
-      </h3>
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
