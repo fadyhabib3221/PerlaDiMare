@@ -673,9 +673,6 @@ export default function TransportationSection({
           </div>
         )}
 
-        </>
-        )}
-
         {/* Rendered independently of activeSection so opening a transfer's details from
             inside a File doesn't jump the user away to the Transportation section. */}
         {viewingCarBooking && (
@@ -861,5 +858,7 @@ export default function TransportationSection({
               </div>
             </div>
           </div>
+        )}
+    </>
   );
 }

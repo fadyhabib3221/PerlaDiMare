@@ -663,9 +663,6 @@ export default function VisaSection({
           </div>
         )}
 
-        </>
-        )}
-
         {/* Rendered independently of activeSection so opening a visa's details from
             inside a File doesn't jump the user away to the Visa section. */}
         {viewingVisaBooking && (
@@ -811,5 +808,7 @@ export default function VisaSection({
               </div>
             </div>
           </div>
+        )}
+    </>
   );
 }

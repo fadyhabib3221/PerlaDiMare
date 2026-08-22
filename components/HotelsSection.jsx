@@ -792,9 +792,6 @@ export default function HotelsSection({
           </table>
         </div>
 
-        </>
-        )}
-
         {/* Rendered independently of activeSection so opening a hotel's details from
             inside a File doesn't jump the user away to the Hotels section. */}
         {viewingHotelBooking && (
@@ -955,5 +952,7 @@ export default function HotelsSection({
               </div>
             </div>
           </div>
+        )}
+    </>
   );
 }
