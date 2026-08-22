@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Building2, ChevronDown, Copy, FileText, List, Pencil, Plus, Printer, Search, TrendingUp, Wallet,
+  Building2, Calendar, ChevronDown, Copy, FileText, List, Pencil, Plus, Printer, Search, TrendingUp, User, Wallet,
   SlidersHorizontal, Trash2, X,
 } from "lucide-react";
 
@@ -16,6 +16,7 @@ export default function HotelsSection({
   formatDisplayDate,
   hasActiveHotelFilter,
   hotelCurrentMonthTotals,
+  activeHotelFilterCount,
   hotelDateRange,
   hotelEditingId,
   hotelError,
@@ -32,6 +33,11 @@ export default function HotelsSection({
   hotelSelectedYear,
   hotelSupplierOther,
   hotelTotals,
+  hotelYearsAvailable,
+  hotelMonthsAvailable,
+  hotelEmployeesAvailable,
+  hotelSuppliersAvailable,
+  hotelNamesAvailable,
   hotelSoldTotal,
   hotelNetTotal,
   hotelProfitTotal,
@@ -45,6 +51,9 @@ export default function HotelsSection({
   navigateToSection,
   rankByServiceDate,
   removeHotelRoomLine,
+  addHotelRoomLine,
+  addRoomChild,
+  removeRoomChild,
   roomLineNights,
   ROOM_CAPACITY,
   ROOM_TYPES,
@@ -66,6 +75,10 @@ export default function HotelsSection({
   updateHotelRoomLine,
   updateRoomChild,
   updateRoomGuest,
+  clearAllHotelFilters,
+  handleSaveHotel,
+  resetHotelForm,
+  sanitizeAgeInput,
   usdHint,
   usdToEgpRate,
   viewingHotelBooking,
