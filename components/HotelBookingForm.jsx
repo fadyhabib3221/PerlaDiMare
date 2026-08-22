@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 
 const HotelBookingForm = ({
   canAddTickets,
@@ -419,16 +419,16 @@ const HotelBookingForm = ({
       <div className="flex items-center gap-3 mt-4">
         <button
           onClick={handleSaveHotel}
-          className="bg-gradient-to-b from-teal-700 to-teal-900 text-white text-sm font-semibold rounded-xl px-5 py-2.5 hover:brightness-110"
+          className="bg-gradient-to-b from-teal-700 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-full px-4 py-2 shadow-sm shadow-teal-800/30 ring-1 ring-inset ring-white/10 transition-colors flex items-center gap-1.5"
         >
-          {hotelEditingId ? "Save changes" : "Add booking"}
+          <Check size={16} /> {hotelEditingId ? "Save changes" : "Add booking"}
         </button>
         {hotelEditingId && (
           <button
             onClick={resetHotelForm}
-            className="text-sm font-semibold text-stone-500 rounded-xl px-4 py-2.5 hover:bg-stone-50"
+            className="border border-stone-300 text-stone-600 text-sm rounded-full px-4 py-2 flex items-center gap-1.5"
           >
-            Cancel
+            <X size={16} /> Cancel
           </button>
         )}
       </div>
