@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Disables the pinch-to-zoom gesture at the touch-handling level. Modern
+       Safari/Chrome ignore the viewport meta tag's user-scalable=no/maximum-scale
+       (Apple in particular forces it to be ignored for accessibility reasons since
+       iOS 10), so that meta tag alone no longer blocks zooming. touch-action is a
+       separate mechanism the browser still respects: pan-x/pan-y allow normal
+       scrolling gestures but the browser no longer recognizes a two-finger pinch
+       as a zoom gesture at all, so there's no zoom scale left to persist/restore
+       on refresh.
+    */
+    touch-action: pan-x pan-y;
+  }
+  body {
+    font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: pan-x pan-y;
+  }
+  ::selection {
+    background-color: rgb(13 148 136 / 0.25);
+  }
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+}
+
+/* Slim, unobtrusive scrollbars for a more polished feel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgb(203 213 225);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(148 163 184);
+}
+
+/* Subtle fade-in for the ticket detail overlay and modals */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.18s ease-out;
+}
+.animate-slide-up {
+  animation: slideUp 0.22s ease-out;
+}
+
+.price-input::-webkit-outer-spin-button,
+.price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.price-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* ---------- Global app animations ---------- */
+@keyframes pdmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pdmPopIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pdmSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pdmSlideRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pdmSpin { to { transform: rotate(360deg); } }
+
+.anim-fade-in { animation: pdmFadeIn 0.35s ease-out both; }
+.anim-slide-up { animation: pdmSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-slide-right { animation: pdmSlideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-spin-slow { animation: pdmSpin 1.4s linear infinite; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The three "Totals" summary cards (Tickets / Total sales / Total profit,
+     and their equivalents on the other tabs) slide up into place whenever
+     the tab is switched or the filters change, and lift slightly on hover
+     so the page feels a little more alive. */
+  div[class*="bg-white rounded-2xl border border-stone-200 p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0"] {
+    animation: pdmSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  div[class*="bg-white rounded-2xl border border-stone-200 p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -8px rgba(15, 118, 110, 0.25);
+  }
+  /* Stagger the three cards slightly so they don't all pop in at once */
+  div[class*="bg-white rounded-2xl border border-stone-200 p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0"]:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  div[class*="bg-white rounded-2xl border border-stone-200 p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0"]:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  div[class*="bg-white rounded-2xl border border-stone-200 p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 min-w-0"]:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+
+  /* Section tabs (Flights/Hotels/Visa/...) lift gently on hover */
+  button[class*="shrink-0 flex flex-col items-center gap-1.5 px-4 md:px-6 py-2.5 md:py-3 rounded-2xl border"] {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  button[class*="shrink-0 flex flex-col items-center gap-1.5 px-4 md:px-6 py-2.5 md:py-3 rounded-2xl border"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px -6px rgba(15, 118, 110, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Any full-screen overlay (modal backdrops and full-page panels) fades in */
+  div[class*="fixed inset-0"] {
+    animation: pdmFadeIn 0.18s ease-out both;
+  }
+  /* The modal card itself (always the overlay's first child) pops/slides in */
+  div[class*="fixed inset-0"][class*="bg-black/40"] > div:first-child,
+  div[class*="fixed inset-0"][class*="bg-stone-900/40"] > div:first-child {
+    animation: pdmPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Buttons and clickable controls get soft press/hover feedback */
+  button:not(:disabled),
+  [role="button"] {
+    transition: transform 0.15s ease, box-shadow 0.15s ease,
+      background-color 0.15s ease, border-color 0.15s ease,
+      color 0.15s ease, opacity 0.15s ease !important;
+  }
+  button:not(:disabled):active,
+  [role="button"]:active {
+    transform: scale(0.96);
+  }
+
+  /* Inputs animate their focus ring smoothly */
+  input, select, textarea {
+    transition: box-shadow 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes pdmFlyAcross { from { opacity: 0; transform: translateX(-40px) rotate(45deg); } to { opacity: 0.7; transform: translateX(0) rotate(45deg); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled) { transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease !important; }
+  button:not(:disabled):active { transform: scale(0.97); }
+  input { transition: box-shadow .15s ease, border-color .15s ease; }
+}
+
+@keyframes pdmFly { 0% { transform: translateX(-6px) rotate(45deg); } 50% { transform: translateX(6px) rotate(45deg); } 100% { transform: translateX(-6px) rotate(45deg); } }
