@@ -1,4 +1,4 @@
-import React from "react";
+import { Check, X } from "lucide-react";
 
 export default function VisaBookingForm({
   canAddTickets,
@@ -22,10 +22,10 @@ export default function VisaBookingForm({
   resetVisaForm,
 }) {
   return canAddTickets && (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5 mb-6">
-      <h3 className="text-sm font-bold text-stone-700 mb-4">
+    <div className="bg-white border border-stone-200 rounded-2xl p-4 md:p-5 mb-6">
+      <h2 className="font-semibold text-stone-900 mb-4">
         {visaEditingId ? "Edit visa booking" : "New visa booking"}
-      </h3>
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
           <label className="text-xs text-stone-500 block mb-1">
@@ -233,16 +233,16 @@ export default function VisaBookingForm({
       <div className="flex items-center gap-2">
         <button
           onClick={handleSaveVisa}
-          className="bg-gradient-to-b from-teal-700 to-teal-900 text-white text-sm font-semibold rounded-xl px-4 py-2 hover:brightness-110"
+          className="bg-gradient-to-b from-teal-700 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-full px-4 py-2 shadow-sm shadow-teal-800/30 ring-1 ring-inset ring-white/10 transition-colors flex items-center gap-1.5"
         >
-          {visaEditingId ? "Save changes" : "Add visa booking"}
+          <Check size={16} /> {visaEditingId ? "Save changes" : "Add visa booking"}
         </button>
         {visaEditingId && (
           <button
             onClick={resetVisaForm}
-            className="text-sm text-stone-500 hover:text-stone-700 border border-stone-300 rounded-xl px-4 py-2"
+            className="border border-stone-300 text-stone-600 text-sm rounded-full px-4 py-2 flex items-center gap-1.5"
           >
-            Cancel
+            <X size={16} /> Cancel
           </button>
         )}
       </div>
