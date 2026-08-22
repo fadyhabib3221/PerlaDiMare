@@ -8,27 +8,20 @@ import * as XLSX from "xlsx-js-style";
 // الدقة أضعف من الـ AI vision لأنه OCR تقليدي (بيقرا الحروف بس، مش بيفهم شكل التذكرة)،
 // فمحتاج بعده regex عشان نحاول نلقط الحقول (اسم الراكب، رقم التذكرة، PNR، المطارات، التاريخ).
 import { createWorker } from "tesseract.js";
-import ActivitiesSection from "./components/sections/ActivitiesSection.jsx";
-import AnalysisSection from "./components/sections/AnalysisSection.jsx";
-import CRMSection from "./components/sections/CRMSection.jsx";
-import FilesSection from "./components/sections/FilesSection.jsx";
-import { AppliedFilters, MultiSelectDropdown, ThFilter, multiFilterGroup, AppErrorBoundary, TimeSelect } from "./components/sections/SharedSectionComponents.jsx";
-import { HotelSummaryCards, HotelBookingForm, HotelBookingsTable } from "./components/sections/HotelsSection.jsx";
-import { VisaSummaryCards, VisaBookingForm, VisaBookingsTable } from "./components/sections/VisaSection.jsx";
-import { CarSummaryCards, CarBookingForm, CarBookingsTable } from "./components/sections/TransportationSection.jsx";
-import {
-  AccountsOverview,
-  AccountsTabs,
-  AccountsSuppliers,
-  AccountsCustomers,
-  AccountsTreasury,
-  AccountsExpenses,
-  AccountsReports,
-  AccountsInvoices,
-} from "./components/sections/AccountsSection.jsx";
+import ActivitiesSection from "./components/ActivitiesSection.jsx";
+import AnalysisSection from "./components/AnalysisSection.jsx";
+import CRMSection from "./components/CRMSection.jsx";
+import FilesSection from "./components/FilesSection.jsx";
+import { AppliedFilters, MultiSelectDropdown, ThFilter, multiFilterGroup } from "./components/FilterControls.jsx";
+import { HotelSummaryCards, HotelBookingForm, HotelBookingsTable } from "./components/HotelsSection.jsx";
+import { VisaSummaryCards, VisaBookingForm, VisaBookingsTable } from "./components/VisaSection.jsx";
+import { CarSummaryCards, CarBookingForm, CarBookingsTable } from "./components/TransportationSection.jsx";
+import { AccountsOverview, AccountsTabs, AccountsSuppliers, AccountsCustomers, AccountsTreasury, AccountsExpenses, AccountsReports, AccountsInvoices } from "./components/AccountsSection.jsx";
 import useSectionNavigation from "./hooks/useSectionNavigation.js";
 import { persistCollection } from "./utils/persistCollection.js";
-import { FlightBookingForm, FlightBookingsTable } from "./components/sections/FlightsSection.jsx";
+import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
+import TimeSelect from "./components/TimeSelect.jsx";
+import { FlightBookingForm, FlightBookingsTable } from "./components/FlightsSection.jsx";
 
 // Every read/write in this file goes through window.storage (the artifact persistent-storage
 // API). That API is only injected when the artifact is rendered inside claude.ai's artifact
