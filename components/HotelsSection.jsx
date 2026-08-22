@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Building2, ChevronDown, Copy, FileText, List, Pencil, Plus, Printer, Search,
+  Building2, ChevronDown, Copy, FileText, List, Pencil, Plus, Printer, Search, TrendingUp, Wallet,
   SlidersHorizontal, Trash2, X,
 } from "lucide-react";
 
