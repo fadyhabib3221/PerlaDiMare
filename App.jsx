@@ -948,6 +948,7 @@ const emptyNewEmployee = {
   isAccounting: false,
   canManageCompanies: false,
   isOwner: false,
+  totpPromptSeen: false,
   // Per-year override, independent of grade/role: which specific closed years this
   // employee can view and/or edit, granted individually from the "Who can view/edit a
   // closed year" picker inside the Closed years panel. Admin and Owner/GM always have
@@ -965,7 +966,7 @@ const emptyNewEmployee = {
 // fully visible and easy to use — this is the one place permissions for an existing
 // employee are changed. Closes itself if the employee record disappears (e.g. deleted
 // from another tab) or is promoted to a main account (which no longer uses these toggles).
-const EmployeePermissionsModal = ({ emp, onClose, onSetRole, onSetPermission, onSetSection, onSetSectionPerm, onSave, onDelete }) => {
+const EmployeePermissionsModal = ({ emp, onClose, onSetRole, onSetPermission, onSetSection, onSetSectionPerm, onSave, onDelete, onDisableTotp }) => {
   // Name/username/password are edited right here, not in the employee table — the
   // table's name cell is a plain, non-editable label that only opens this modal.
   const [draft, setDraft] = useState({ name: "", username: "", password: "" });
@@ -1058,6 +1059,20 @@ const EmployeePermissionsModal = ({ emp, onClose, onSetRole, onSetPermission, on
               </button>
             </div>
           </div>
+          {emp.totpEnabled && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              <span className="flex items-center gap-1.5 text-xs text-amber-800">
+                <Smartphone size={13} /> Two-factor authentication is ON
+              </span>
+              <button
+                type="button"
+                onClick={onDisableTotp}
+                className="text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 rounded-lg px-2 py-1"
+              >
+                Disable 2FA
+              </button>
+            </div>
+          )}
           <div>
             <label className="text-xs text-stone-500 block mb-1">Grade</label>
             <select
@@ -2018,6 +2033,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
   const [pendingTotpLogin, setPendingTotpLogin] = useState(null);
   const [otpCodeInput, setOtpCodeInput] = useState("");
   const [otpError, setOtpError] = useState("");
+  const [showFirstLoginTotpPrompt, setShowFirstLoginTotpPrompt] = useState(false);
   // Basic brute-force throttling: after 5 failed attempts in a row, lock the login form
   // for 30 seconds. This is in-memory only (resets on page reload), so it's friction
   // against casual/automated guessing, not a real security boundary.
@@ -4583,6 +4599,7 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
       password: await hashPassword(setupPassword),
       isAdmin: true,
       keyWrap: await wrapWorkspaceKey(workspaceKeyObj, setupPassword),
+      totpPromptSeen: false,
     };
     setWorkspaceKey(workspaceKeyObj);
     await persistEmployees([admin]);
@@ -4655,6 +4672,9 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
       }
     } catch (e) {
       // Best-effort; falls back to the default "flights" section
+    }
+    if (!match.totpEnabled && !match.totpPromptSeen) {
+      setShowFirstLoginTotpPrompt(true);
     }
   };
 
@@ -5868,6 +5888,36 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
     recordActivity("Employees", "edited", "Disabled two-factor authentication on their own account");
     setTotpDisablePassword("");
     setTotpSetupSuccess("Two-factor authentication has been turned off.");
+  };
+
+  // Admin/Owner override: instantly disables 2FA for ANOTHER employee's account,
+  // without needing that employee's password — the recovery path for a lost/broken
+  // authenticator device.
+  const handleAdminDisableTotp = async (username) => {
+    if (!currentUser.isAdmin && !isOwnerUser) {
+      setManageError("Only the main account can disable 2FA for another employee");
+      return;
+    }
+    const next = (employees || []).map((e) =>
+      e.username === username ? { ...e, totpEnabled: false, totpSecret: null } : e
+    );
+    await persistEmployees(next);
+    recordActivity("Employees", "edited", `Disabled two-factor authentication for @${username} (admin override)`);
+  };
+
+  // Marks the first-login 2FA prompt as seen, and if they chose to set it up now,
+  // opens the Change Password modal straight into the QR-code setup step.
+  const closeFirstLoginTotpPrompt = async (openSetup) => {
+    if (currentUser) {
+      await persistEmployees((employees || []).map((e) =>
+        e.username === currentUser.username ? { ...e, totpPromptSeen: true } : e
+      ));
+    }
+    setShowFirstLoginTotpPrompt(false);
+    if (openSetup) {
+      setShowChangePassword(true);
+      startTotpSetup();
+    }
   };
 
   // Resets every field of the password/2FA modal (not just the password fields) so
@@ -13239,7 +13289,48 @@ function TicketsApp({ onChangeServer, currentServerUrl } = {}) {
               setConfirmDialog(null);
             });
           }}
+          onDisableTotp={() => {
+            requestConfirm(
+              "Disable two-factor authentication for this employee? They'll sign in with just their password until they set it up again — useful if their phone/authenticator is lost.",
+              () => {
+                handleAdminDisableTotp(openPermissionsFor);
+                setConfirmDialog(null);
+              }
+            );
+          }}
         />
+      )}
+
+      {showFirstLoginTotpPrompt && currentUser && (
+        <div className="fixed inset-0 bg-stone-900/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl border border-stone-200 p-5 w-full max-w-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="bg-teal-800/10 text-teal-800 rounded-xl p-1.5">
+                <Smartphone size={18} />
+              </div>
+              <h2 className="font-semibold text-stone-900">Secure your account</h2>
+            </div>
+            <p className="text-xs text-stone-500 mb-4">
+              Welcome, {currentUser.name}! For extra security, you can turn on two-factor
+              authentication (2FA) using an authenticator app, in addition to your password.
+              You can always set this up later from "Change password".
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => closeFirstLoginTotpPrompt(true)}
+                className="w-full bg-gradient-to-b from-teal-700 to-teal-900 hover:from-teal-600 hover:to-teal-800 text-white text-sm font-semibold rounded-xl px-4 py-2 shadow-sm shadow-teal-800/30"
+              >
+                Set up 2FA now
+              </button>
+              <button
+                onClick={() => closeFirstLoginTotpPrompt(false)}
+                className="w-full border border-stone-300 text-stone-600 text-sm rounded-xl px-4 py-2"
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showChangePassword && (
